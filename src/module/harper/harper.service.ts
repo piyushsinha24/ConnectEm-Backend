@@ -37,7 +37,7 @@ export class HarperService {
         let res = await client.query(query)
 
         return {
-            success: true,
+            success: res.statusCode === 200,
             data: res.data
         }
     }
