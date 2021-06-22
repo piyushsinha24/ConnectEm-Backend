@@ -1,5 +1,5 @@
 export class DBConfig {
-    DB_URL: string
+    DB_HOST: string
 
     DB_NAME: string
 

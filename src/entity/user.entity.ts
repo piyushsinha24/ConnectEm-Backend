@@ -1,5 +1,7 @@
+import { classToPlain, Exclude } from "class-transformer"
+
 export class User {
-    id: number
+    id: string
 
     firstName: string
 
@@ -7,7 +9,12 @@ export class User {
 
     email: string
 
+    @Exclude()
     password: string
 
     token?: string
+
+    toJSON() {
+        return classToPlain(this)
+    }
 }
