@@ -3,8 +3,6 @@ export class Event {
 
     hostID: string
 
-
-
     title: string
 
     description: string

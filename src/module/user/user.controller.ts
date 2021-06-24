@@ -1,43 +1,133 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { hash, verify } from 'argon2';
+import { DevGuard } from 'src/guard/dev.guard';
 import { IdGuard } from 'src/guard/id.guard';
-import { CommonResponse } from 'src/response/common.res';
+import { UserListRes, UserRes } from 'src/response/user.res';
 import { CreateUserDTO, LoginUserDTO, UpdateUserDTO } from 'src/validation/user.dto';
+import { TokenService } from '../token/token.service';
 import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
     constructor(
+        private readonly tokenService: TokenService,
         private readonly userService: UserService,
     ) { }
 
     @Post('register')
-    register(@Body() userDTO: CreateUserDTO): Promise<CommonResponse> {
-        return this.userService.register(userDTO)
+    async register(
+        @Body() userDTO: CreateUserDTO,
+    ): Promise<UserRes> {
+
+        //* Check email if exists
+        let user = await this.userService.getOneByEmail(userDTO.email, true)
+        if (user)
+            throw new HttpException('Email already exists.', HttpStatus.BAD_REQUEST)
+
+        //* Hash password
+        let hashedPass = await hash(userDTO.password)
+        userDTO.password = hashedPass
+
+        //* Create user
+        let id = await this.userService.insert(userDTO)
+
+        //* Create and update Token
+        let token = this.tokenService.createToken(id)
+        await this.userService.update(
+            id,
+            {
+                token,
+            }
+        )
+
+        //* Get User
+        user = await this.userService.getOneByID(id, true)
+
+        return {
+            success: true,
+            data: user,
+        }
+
     }
 
     @Post('login')
-    login(@Body() userDTO: LoginUserDTO): Promise<CommonResponse> {
-        return this.userService.login(userDTO)
-    }
+    async login(
+        @Body() loginDTO: LoginUserDTO,
+    ): Promise<UserRes> {
 
+        //* Get user by email
+        let user = await this.userService.getOneByEmail(loginDTO.email, false)
+
+        if (!user)
+            throw new HttpException('Incorrect email or password', HttpStatus.BAD_REQUEST)
+
+        //* Check password
+        let check = await verify(user.password, loginDTO.password)
+        if (!check)
+            throw new HttpException('Incorrect email or password', HttpStatus.BAD_REQUEST)
+
+        //* Get user
+        user = await this.userService.getOneByID(user.id, true)
+
+        return {
+            success: true,
+            data: user,
+        }
+    }
 
     @Put()
     @UseGuards(IdGuard)
-    update(
+    async update(
         @Param('id') id: string,
-        @Body() userDTO: UpdateUserDTO
-    ): Promise<CommonResponse> {
-        return this.userService.update(id, userDTO)
+        @Body() userDTO: UpdateUserDTO,
+    ): Promise<UserRes> {
+
+        //* Delete token from dto
+        if (userDTO.token)
+            delete userDTO.token
+
+        //* Get the user
+        let user = await this.userService.getOneByID(id, true)
+        if (!user)
+            throw new HttpException('User not found', HttpStatus.BAD_REQUEST)
+
+        //* Update the user
+        await this.userService.update(id, userDTO)
+
+        //* Get updated user
+        user = await this.userService.getOneByID(id, true)
+
+        return {
+            success: true,
+            data: user,
+        }
     }
 
     @Get('me')
     @UseGuards(IdGuard)
-    me(@Param('id') id: string): Promise<CommonResponse> {
-        return this.userService.me(id)
+    async me(
+        @Param('id') id: string
+    ): Promise<UserRes> {
+
+        //* Get user
+        let user = await this.userService.getOneByID(id, true)
+        if (!user)
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND)
+
+        return {
+            success: true,
+            data: user
+        }
     }
 
     @Get()
-    getAll(): Promise<CommonResponse> {
-        return this.userService.getAll()
+    @UseGuards(DevGuard)
+    async getAll(): Promise<UserListRes> {
+        let users = await this.userService.getAll(true)
+
+        return {
+            success: true,
+            data: users,
+        }
     }
 }
