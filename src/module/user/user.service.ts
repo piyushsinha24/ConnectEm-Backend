@@ -51,7 +51,7 @@ export class UserService {
         res = await this.harperService.getOneByID(
             'user',
             id,
-            true,
+            false,
             'id,email,firstName,lastName,token'
         )
 
@@ -85,7 +85,7 @@ export class UserService {
             'email',
             loginDTO.email,
             false,
-            'id,email,firstName,lastName'
+            'id,email,firstName,lastName,token'
         )
 
         return res3
