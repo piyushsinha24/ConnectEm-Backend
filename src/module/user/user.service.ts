@@ -1,158 +1,116 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { hash, verify } from 'argon2';
+import { ConfigService } from '@nestjs/config';
+import { DBConfig } from 'src/config/db.config';
 import { User } from 'src/entity/user.entity';
-import { CommonResponse } from 'src/response/common.res';
-import { CreateUserDTO, LoginUserDTO, UpdateUserDTO } from 'src/validation/user.dto';
+import { CreateUserDTO, UpdateUserDTO } from 'src/validation/user.dto';
 import { HarperService } from '../harper/harper.service';
-import { TokenService } from '../token/token.service';
 
 @Injectable()
 export class UserService {
+
     constructor(
         private readonly harperService: HarperService,
-        private readonly tokenService: TokenService,
+        private readonly dbConfig: ConfigService<DBConfig>,
     ) { }
 
-    async register(userDTO: CreateUserDTO): Promise<CommonResponse> {
 
-        //* Check if user exists
-        let res = await this.harperService.getOneByProperty(
-            'user',
-            'email',
-            userDTO.email,
-            true
-        )
-        if (res.success) {
-            throw new HttpException(`Email already exists`, HttpStatus.BAD_REQUEST)
-        }
+    async insert(userDTO: CreateUserDTO): Promise<string> {
+        let client = this.harperService.getClient()
 
-        //* Hash the password
-        let password = await hash(userDTO.password)
-        userDTO.password = password
-
-        //* Insert the user
-        let id = await this.harperService.insertOne('user', { ...userDTO })
-
-        //* Create Token
-        let token = this.tokenService.createToken(id)
-
-        //* Update user
-        await this.harperService.update(
-            'user',
-            id,
-            {
-                token
-            }
-        ).catch((e) => {
-            console.log(e)
-            throw new HttpException('Cannot create user', HttpStatus.BAD_REQUEST)
+        let res = await client.insert({
+            table: 'user',
+            records: [
+                {
+                    ...userDTO,
+                }
+            ]
         })
 
-        res = await this.harperService.getOneByID(
-            'user',
-            id,
-            false,
-            'id,email,firstName,lastName,token'
-        )
+        if (res.statusCode !== 200)
+            throw new HttpException('Cannot insert user', HttpStatus.BAD_REQUEST)
 
-        return res
+        let id = res.data.inserted_hashes[0]
+
+        return id
     }
 
-    async login(loginDTO: LoginUserDTO): Promise<CommonResponse> {
+    async update(id: string, userDTO: UpdateUserDTO): Promise<string> {
+        let client = this.harperService.getClient()
 
-        //* Check if email exists
-        let res = await this.harperService.getOneByProperty(
-            'user',
-            'email',
-            loginDTO.email,
-            true,
-        )
-
-        if (!res.success)
-            throw new HttpException('Incorrect email or password', HttpStatus.BAD_REQUEST)
-
-        //* Check user password
-        let user = res.data as User
-
-        let res2 = await verify(user.password, loginDTO.password)
-
-        if (!res2)
-            throw new HttpException('Incorrect email or password', HttpStatus.BAD_REQUEST)
-
-        //*Get user
-        let res3 = await this.harperService.getOneByProperty(
-            'user',
-            'email',
-            loginDTO.email,
-            false,
-            'id,email,firstName,lastName,token'
-        )
-
-        return res3
-    }
-
-    async update(id: string, userDTO: UpdateUserDTO): Promise<CommonResponse> {
-
-        //* Check if user exists
-        let res = await this.harperService.getOneByID(
-            'user',
-            id,
-            true
-        )
-        if (!res.success)
-            throw new HttpException('User not found', HttpStatus.NOT_FOUND)
-
-        //* Hash password if available
-        if (userDTO.password) {
-            let hashedPass = await hash(userDTO.password)
-            userDTO.password = hashedPass
-        }
-
-        //* Update user
-        await this.harperService.update(
-            'user',
-            id,
-            {
-                ...userDTO,
-            }
-        ).catch((_) => {
-            throw new HttpException('Cannot update user', HttpStatus.BAD_REQUEST)
+        let res = await client.update({
+            table: 'user',
+            records: [
+                {
+                    id: id,
+                    ...userDTO,
+                }
+            ]
         })
 
-        //* Get user
-        let res1 = await this.harperService.getOneByID(
-            'user',
-            id,
-            false,
-            'id,email,firstName,lastName,token'
-        )
+        if (res.statusCode !== 200)
+            throw new HttpException('Cannot insert user', HttpStatus.BAD_REQUEST)
 
-        if (res1.success)
-            return res1
-        else
-            throw new HttpException('Cannot update user', HttpStatus.BAD_REQUEST)
+        return id
+    }
+
+    async getOneByID(id: string, isMin: boolean): Promise<User> {
+
+        let user: User
+
+        let client = this.harperService.getClient()
+        let dbName = this.dbConfig.get<string>('DB_NAME')
+
+        let query = `SELECT ${isMin ? 'id,email,firstName,lastName,token' : '*'} FROM ${dbName}.user WHERE id= "${id}"`
+
+        let res = await client.query(query)
+
+        if (res.statusCode !== 200)
+            throw new HttpException('User query failed', HttpStatus.BAD_REQUEST)
+
+        if (res.data.length > 0)
+            user = res.data[0]
+
+        return user
 
     }
 
-    async me(id: string): Promise<CommonResponse> {
-        let res = await this.harperService.getOneByID(
-            'user',
-            id,
-            false,
-            'id,email,firstName,lastName,token',
-        )
+    async getOneByEmail(email: string, isMin: boolean): Promise<User> {
+        let user: User
 
-        if (res.success)
-            return res
-        else
-            throw new HttpException('User not found', HttpStatus.NOT_FOUND)
+        let client = this.harperService.getClient()
+        let dbName = this.dbConfig.get<string>('DB_NAME')
+
+        let query = `SELECT ${isMin ? 'id,email,firstName,lastName,token' : '*'} FROM ${dbName}.user WHERE email="${email}";`
+
+        let res = await client.query(query)
+
+        if (res.statusCode !== 200)
+            throw new HttpException('Check email query failed', HttpStatus.BAD_REQUEST)
+
+        if (res.data.length > 0)
+            user = res.data[0]
+
+        return user
+
     }
 
-    async getAll(): Promise<CommonResponse> {
-        return this.harperService.getAll(
-            'user',
-            false,
-            'id,email,firstName,lastName'
-        )
+    async getAll(isMin: boolean): Promise<User[]> {
+        let client = this.harperService.getClient()
+        let dbName = this.dbConfig.get<string>('DB_NAME')
+
+        let query = `SELECT ${isMin ? 'id,email,firstName,lastName,token' : '*'} FROM ${dbName}.user;`
+
+        let res = await client.query(query)
+
+        if (res.statusCode !== 200)
+            throw new HttpException('Check email query failed', HttpStatus.BAD_REQUEST)
+
+        let users: User[] = []
+
+        res.data.map(d => {
+            users.push(d as User)
+        })
+
+        return users
     }
 }

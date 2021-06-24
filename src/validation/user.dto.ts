@@ -34,6 +34,11 @@ export class UpdateUserDTO {
     @MinLength(6)
     @IsOptional()
     password?: string
+
+    @IsString()
+    @MinLength(6)
+    @IsOptional()
+    token?: string
 }
 
 export class LoginUserDTO {
