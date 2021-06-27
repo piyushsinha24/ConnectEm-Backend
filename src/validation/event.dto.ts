@@ -1,19 +1,4 @@
-import { IsArray, IsNotEmpty, IsString } from "class-validator"
-
-export class EventDateDTO {
-
-    @IsString()
-    date: string
-
-    @IsArray()
-    slotLimit: number[]
-
-    @IsArray()
-    from: string[]
-
-    @IsArray()
-    to: string[]
-}
+import { IsArray, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class CreateEventDTO {
 
@@ -33,6 +18,95 @@ export class CreateEventDTO {
     tags: string[]
 
     @IsArray()
-    timing?: EventDateDTO[]
+    timings?: TimingDTO[]
 }
 
+
+export class TimingDTO {
+
+    @IsString()
+    @IsNotEmpty()
+    date: string
+
+    @IsArray()
+    slots?: SlotDTO[]
+}
+
+export class SlotDTO {
+
+    @IsString()
+    @IsNotEmpty()
+    from: string
+
+    @IsString()
+    @IsNotEmpty()
+    to: string
+
+    @IsNumber()
+    available: number
+}
+
+export class UpdateEventDTO {
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    title?: string
+
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    description?: string
+
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    eventLink?: string
+
+    @IsArray()
+    @IsOptional()
+    tags?: string[]
+}
+
+export class UpdateTimingDTO {
+    @IsString()
+    @IsNotEmpty()
+    id: string
+
+    @IsString()
+    @IsOptional()
+    @IsNotEmpty()
+    date?: string
+
+    @IsArray()
+    @IsOptional()
+    slots?: UpdateSlotsDTO[]
+}
+
+export class UpdateSlotsDTO {
+
+    @IsString()
+    @IsNotEmpty()
+    id: string
+
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    from?: string
+
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    to?: string
+
+    @IsNumber()
+    @IsOptional()
+    available?: number
+
+    @IsArray()
+    @IsOptional()
+    email?: string[]
+
+    @IsArray()
+    @IsOptional()
+    name?: string[]
+}

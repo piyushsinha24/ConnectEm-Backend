@@ -1,7 +1,11 @@
+import { User } from "./user.entity"
+
 export class Event {
-    id: string
+    id?: string
 
     hostID: string
+
+    host?: User
 
     title: string
 
@@ -11,28 +15,31 @@ export class Event {
 
     tags: string[]
 
-    timing: EventDate[]
+    timings: Timing[]
 
     isActive: boolean
 
-
 }
 
-export class EventDate {
+export class Timing {
 
     id: string
 
-    eventID: string
-
     date: string
 
-    slotLimit: number[]
+    slots: Slot[]
+}
+
+export class Slot {
+    id: string
+
+    from: string
+
+    to: string
+
+    available: number
 
     email: string[]
 
     name: string[]
-
-    from: string[]
-
-    to: string[]
 }

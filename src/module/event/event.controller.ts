@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { IdGuard } from 'src/guard/id.guard';
 import { EventCancelRes, EventListRes, EventRes } from 'src/response/event.res';
-import { CreateEventDTO } from 'src/validation/event.dto';
+import { CreateEventDTO, UpdateEventDTO } from 'src/validation/event.dto';
 import { EventService } from './event.service';
 
 @Controller('event')
@@ -11,23 +11,13 @@ export class EventController {
         private readonly eventService: EventService,
     ) { }
 
-    @Post()
+
+    @Post('/toggle/:eventID')
     @UseGuards(IdGuard)
-    async create(
-        @Param('id') id: string,
-        @Body() eventDTO: CreateEventDTO,
+    async cancel(
+        @Param('eventID') eventID: string,
     ): Promise<EventRes> {
-
-        let { timing, ...eventDTO2 } = eventDTO
-
-        //* Create Event
-        let eventID = await this.eventService.insertEvent(id, eventDTO2)
-
-        //* Create Event dates
-        await this.eventService.insertEventDates(eventID, timing)
-
-        //* Get the event
-        let event = await this.eventService.getOneByID(eventID)
+        let event = await this.eventService.toggleEvent(eventID)
 
         return {
             success: true,
@@ -35,28 +25,35 @@ export class EventController {
         }
     }
 
-    @Delete(':eventID')
+    @Post()
     @UseGuards(IdGuard)
-    async update(
+    async create(
         @Param('id') id: string,
-        @Param('eventID') eventID: string
-    ): Promise<EventCancelRes> {
+        @Body() eventDTO: CreateEventDTO,
+    ): Promise<EventRes> {
 
-        //* Cancel event
-        await this.eventService.cancelEvent(id, eventID)
+        let eventID = await this.eventService.insertOne(id, eventDTO)
+
+        let event = await this.eventService.getOne(eventID, true)
+
+        if (!event)
+            throw new HttpException('Cannot create event', HttpStatus.BAD_REQUEST)
 
         return {
             success: true,
-            data: 'Event Cancelled'
+            data: event
         }
     }
 
+
     @Get(':eventID')
     async getOne(
-        @Param('eventID') eventID: string,
+        @Param('eventID') eventID: string
     ): Promise<EventRes> {
+        let event = await this.eventService.getOne(eventID, true)
 
-        let event = await this.eventService.getOneByID(eventID)
+        if (!event)
+            throw new HttpException('Event not found', HttpStatus.NOT_FOUND)
 
         return {
             success: true,
@@ -67,14 +64,38 @@ export class EventController {
     @Get()
     @UseGuards(IdGuard)
     async getAll(
-        @Param('id') id: string
+        @Param('id') id: string,
     ): Promise<EventListRes> {
-
         let events = await this.eventService.getAll(id)
 
         return {
             success: true,
             data: events,
+        }
+    }
+
+    @Put('/details/:eventID')
+    @UseGuards(IdGuard)
+    async updateEventDetails(
+        @Param('eventID') eventID: string,
+        @Body() eventDTO: UpdateEventDTO,
+    ): Promise<EventRes> {
+
+        let event = await this.eventService.getOne(eventID, true)
+
+        if (!event)
+            throw new HttpException('Event not found', HttpStatus.NOT_FOUND)
+
+        let res = await this.eventService.updateEventDetails(eventID, eventDTO)
+
+        if (!res)
+            throw new HttpException('Cannot update event', HttpStatus.BAD_REQUEST)
+
+        event = await this.eventService.getOne(eventID, true)
+
+        return {
+            success: true,
+            data: event,
         }
     }
 }
