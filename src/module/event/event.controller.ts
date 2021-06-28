@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { IdGuard } from 'src/guard/id.guard';
 import { EventCancelRes, EventListRes, EventRes } from 'src/response/event.res';
-import { CreateEventDTO, UpdateEventDTO } from 'src/validation/event.dto';
+import { CreateEventDTO, TimingDTO, UpdateEventDTO, UpdateTimingDTO } from 'src/validation/event.dto';
 import { EventService } from './event.service';
 
 @Controller('event')
@@ -74,28 +74,29 @@ export class EventController {
         }
     }
 
-    @Put('/details/:eventID')
+    @Put()
     @UseGuards(IdGuard)
-    async updateEventDetails(
-        @Param('eventID') eventID: string,
+    async updateEvent(
+        @Param('id') id: string,
         @Body() eventDTO: UpdateEventDTO,
     ): Promise<EventRes> {
 
-        let event = await this.eventService.getOne(eventID, true)
+        let event = await this.eventService.getOne(eventDTO.id, true)
 
         if (!event)
             throw new HttpException('Event not found', HttpStatus.NOT_FOUND)
 
-        let res = await this.eventService.updateEventDetails(eventID, eventDTO)
+        let res = await this.eventService.updateEvent(eventDTO, id)
 
         if (!res)
             throw new HttpException('Cannot update event', HttpStatus.BAD_REQUEST)
 
-        event = await this.eventService.getOne(eventID, true)
+        event = await this.eventService.getOne(eventDTO.id, true)
 
         return {
             success: true,
             data: event,
         }
     }
+
 }

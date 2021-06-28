@@ -1,4 +1,4 @@
-import { IsArray, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator"
+import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class CreateEventDTO {
 
@@ -20,7 +20,6 @@ export class CreateEventDTO {
     @IsArray()
     timings?: TimingDTO[]
 }
-
 
 export class TimingDTO {
 
@@ -49,22 +48,28 @@ export class SlotDTO {
 export class UpdateEventDTO {
     @IsString()
     @IsNotEmpty()
-    @IsOptional()
-    title?: string
+    id: string
 
     @IsString()
     @IsNotEmpty()
-    @IsOptional()
-    description?: string
+    title: string
 
     @IsString()
     @IsNotEmpty()
-    @IsOptional()
-    eventLink?: string
+    description: string
+
+    @IsString()
+    @IsNotEmpty()
+    eventLink: string
 
     @IsArray()
-    @IsOptional()
-    tags?: string[]
+    tags: string[]
+
+    @IsArray()
+    timings: UpdateTimingDTO[]
+
+    @IsBoolean()
+    isActive: boolean
 }
 
 export class UpdateTimingDTO {
@@ -90,23 +95,18 @@ export class UpdateSlotsDTO {
 
     @IsString()
     @IsNotEmpty()
-    @IsOptional()
-    from?: string
+    from: string
 
     @IsString()
     @IsNotEmpty()
-    @IsOptional()
-    to?: string
+    to: string
 
     @IsNumber()
-    @IsOptional()
-    available?: number
+    available: number
 
     @IsArray()
-    @IsOptional()
-    email?: string[]
+    email: string[]
 
     @IsArray()
-    @IsOptional()
-    name?: string[]
+    name: string[]
 }
