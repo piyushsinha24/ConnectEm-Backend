@@ -148,6 +148,10 @@ export class MailService {
         let timing = event.timings.find(t => t.id === bookDTO.dateID)
         let slot = timing.slots.find(s => s.id === bookDTO.slotID)
 
+        let d = new Date(slot.from)
+
+        console.log(d)
+
         let html = this._getBookSuccessHTML(
             slot.name[attendeeIndex],
             event.host.lastName,
