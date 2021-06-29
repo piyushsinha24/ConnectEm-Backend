@@ -33,6 +33,9 @@ export class BookService {
         if (slot.available === 0)
             throw new HttpException('Slot not available', HttpStatus.BAD_REQUEST)
 
+        if (slot.email.includes(bookDTO.email))
+            throw new HttpException('Booking with this email is already done', HttpStatus.BAD_REQUEST)
+
         slot.available = slot.available - 1
 
         slot.email.push(bookDTO.email)
