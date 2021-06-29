@@ -3,6 +3,7 @@ import { BookRes } from 'src/response/book.res';
 import { BookDTO } from 'src/validation/book.dto';
 import { EventService } from '../event/event.service';
 import { HarperService } from '../harper/harper.service';
+import { MailService } from '../mail/mail.service';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class BookService {
 
     constructor(
         private readonly eventService: EventService,
+        private readonly mailService: MailService,
     ) { }
 
     async bookEvent(bookDTO: BookDTO): Promise<boolean> {
@@ -51,6 +53,14 @@ export class BookService {
 
         if (!res)
             throw new HttpException('Cannot book slot.', HttpStatus.BAD_REQUEST)
+
+        event = await this.eventService.getOne(event.id, true)
+
+        this.mailService.sendBookEventMail(
+            event,
+            bookDTO,
+            slot.email.length - 1,
+        )
 
         return res
     }

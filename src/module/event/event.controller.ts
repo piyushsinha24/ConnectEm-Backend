@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, 
 import { IdGuard } from 'src/guard/id.guard';
 import { EventCancelRes, EventListRes, EventRes } from 'src/response/event.res';
 import { CreateEventDTO, TimingDTO, UpdateEventDTO, UpdateTimingDTO } from 'src/validation/event.dto';
+import { MailService } from '../mail/mail.service';
 import { EventService } from './event.service';
 
 @Controller('event')
@@ -9,6 +10,7 @@ export class EventController {
 
     constructor(
         private readonly eventService: EventService,
+        private readonly mailService: MailService,
     ) { }
 
 
@@ -45,6 +47,10 @@ export class EventController {
         }
     }
 
+    @Get('/mail')
+    async sendMail(): Promise<boolean> {
+        return true
+    }
 
     @Get(':eventID')
     async getOne(

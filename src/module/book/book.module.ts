@@ -5,6 +5,7 @@ import { TokenModule } from '../token/token.module';
 import { HarperModule } from '../harper/harper.module';
 import { UserModule } from '../user/user.module';
 import { EventtModule } from '../event/eventt.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
     imports: [
@@ -12,6 +13,7 @@ import { EventtModule } from '../event/eventt.module';
         HarperModule,
         UserModule,
         EventtModule,
+        MailModule,
     ],
     controllers: [
         BookController,

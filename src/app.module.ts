@@ -1,3 +1,4 @@
+import { MailModule } from './module/mail/mail.module';
 import { BookModule } from './module/book/book.module';
 import { UserModule } from './module/user/user.module';
 import { EventtModule } from './module/event/eventt.module';
@@ -8,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    MailModule,
     BookModule,
     UserModule,
     EventtModule,
