@@ -1,4 +1,5 @@
-import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator"
+import { Type } from "class-transformer"
+import { IsArray, IsBoolean, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 
 export class CreateEventDTO {
 
@@ -14,11 +15,17 @@ export class CreateEventDTO {
     @IsNotEmpty()
     eventLink: string
 
+
+    @IsString()
+    @IsNotEmpty()
+    timezone: string
+
     @IsArray()
     tags: string[]
 
-    @IsArray()
-    timings?: TimingDTO[]
+    @ValidateNested({ each: true })
+    @Type(() => TimingDTO)
+    timings: TimingDTO[]
 }
 
 export class TimingDTO {
@@ -27,8 +34,9 @@ export class TimingDTO {
     @IsNotEmpty()
     date: string
 
-    @IsArray()
-    slots?: SlotDTO[]
+    @ValidateNested({ each: true })
+    @Type(() => SlotDTO)
+    slots: SlotDTO[]
 }
 
 export class SlotDTO {
@@ -65,7 +73,8 @@ export class UpdateEventDTO {
     @IsArray()
     tags: string[]
 
-    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => UpdateTimingDTO)
     timings: UpdateTimingDTO[]
 
     @IsBoolean()
@@ -78,13 +87,12 @@ export class UpdateTimingDTO {
     id: string
 
     @IsString()
-    @IsOptional()
     @IsNotEmpty()
-    date?: string
+    date: string
 
-    @IsArray()
-    @IsOptional()
-    slots?: UpdateSlotsDTO[]
+    @ValidateNested({ each: true })
+    @Type(() => UpdateSlotsDTO)
+    slots: UpdateSlotsDTO[]
 }
 
 export class UpdateSlotsDTO {

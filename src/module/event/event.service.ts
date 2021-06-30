@@ -118,7 +118,7 @@ export class EventService {
 
         let client = this.harperService.getClient()
 
-        let event = await this.getOne(eventID, true)
+        let event = await this.getOne(eventID, false)
 
         if (!event)
             throw new HttpException('Event not found', HttpStatus.NOT_FOUND)

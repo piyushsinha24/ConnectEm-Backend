@@ -60,6 +60,7 @@ export class BookService {
             event,
             bookDTO,
             slot.email.length - 1,
+
         )
 
         return res

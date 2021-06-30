@@ -20,4 +20,8 @@ export class BookDTO {
     @IsString()
     @IsNotEmpty()
     name: string
+
+    @IsString()
+    @IsNotEmpty()
+    timezone: string
 }
