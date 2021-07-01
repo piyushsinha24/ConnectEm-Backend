@@ -11,6 +11,8 @@ export class Event {
 
     description: string
 
+    timezone: string
+
     eventLink: string
 
     tags: string[]

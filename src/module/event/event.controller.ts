@@ -41,6 +41,8 @@ export class EventController {
         if (!event)
             throw new HttpException('Cannot create event', HttpStatus.BAD_REQUEST)
 
+        this.mailService.sendEventCreatedMail(event)
+
         return {
             success: true,
             data: event

@@ -28,6 +28,7 @@
     "@nestjs/platform-express": "^7.5.1",
     "argon2": "^0.28.2",
     "axios": "^0.21.1",
+    "calendar-link": "^2.1.1",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "harperive": "^2.0.1",

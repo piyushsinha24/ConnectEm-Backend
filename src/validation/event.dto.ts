@@ -15,7 +15,6 @@ export class CreateEventDTO {
     @IsNotEmpty()
     eventLink: string
 
-
     @IsString()
     @IsNotEmpty()
     timezone: string
