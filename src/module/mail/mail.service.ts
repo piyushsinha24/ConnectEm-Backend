@@ -35,6 +35,7 @@ export class MailService {
         to: string,
         meetlink: string,
         calLink: string,
+        timezone: string,
     ): string {
         return `
         <!DOCTYPE html>
@@ -59,7 +60,7 @@ export class MailService {
                     <td>
                             <p>Hi ${name},</p>
                             <p>Your meeting with Mr ${hostLastName} is scheduled for <b>${date}</b>.</p>
-                            <p>Time slot: <b>${from} - ${to}</b>.</p>
+                            <p>Time slot: <b>${from} - ${to}</b>. ${timezone}</p>
                             <table style="font-family: sans-serif; background-color: #26D07C; border-radius: 5px;" cellpadding="8">
                                 <td style="border: 1px solid #fff;">
                                     <a style="width: 80px; height: 40px; text-decoration: none; color: #FFFFFF; border-radius: 5px;" href="${meetlink}" target="_blank">Join</a>
@@ -88,6 +89,7 @@ export class MailService {
         from: string,
         to: string,
         calLink: string,
+        timezone: string,
     ): string {
         return `
         <!DOCTYPE html>
@@ -112,7 +114,7 @@ export class MailService {
                     <td>
                             <p>Hi ${hostFirstName} ${hostLastName},</p>
                             <p>You have a new attendee ${name} for <b>${date}</b>.</p>
-                            <p>Time slot: <b>${from} - ${to}</b>.</p>
+                            <p>Time slot: <b>${from} - ${to}</b>. ${timezone}</p>
                             <table style="font-family: sans-serif; background-color: #26D07C; border-radius: 5px;" cellpadding="8">
                                 <td>
                                     <a style="width: 80px; height: 40px; text-decoration: none; color: #FFFFFF; border-radius: 5px;" href="${calLink}" target="_blank">Add To Calendar</a>
@@ -134,7 +136,7 @@ export class MailService {
         hostFirstName: string,
         hostLastName: string,
         eventTitle: string,
-        eventID: string
+        eventID: string,
     ): string {
         return `
         <!DOCTYPE html>
@@ -193,7 +195,7 @@ export class MailService {
 
         const calEventLink = google({
             title: event.title,
-            description: event.description,
+            description: `${event.description}\nEvent Link:${event.eventLink}`,
             start: slot.from,
             end: slot.to,
         })
@@ -206,6 +208,7 @@ export class MailService {
             formatTime(slot.to, bookDTO.timezone),
             event.eventLink,
             calEventLink,
+            bookDTO.timezone,
         )
 
         let hostMail = this._getHostBookHTML(
@@ -216,6 +219,7 @@ export class MailService {
             formatTime(slot.from, event.timezone),
             formatTime(slot.to, event.timezone),
             calEventLink,
+            event.timezone,
         )
 
         let attendeeMailOptions = {
