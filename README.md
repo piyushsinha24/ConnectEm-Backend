@@ -63,9 +63,7 @@ GMAIL_PASS
 
 ## Documentation
 
-```bash
-https://documenter.getpostman.com/view/8870498/TzeZFnL2
-```
+[https://documenter.getpostman.com/view/8870498/TzeZFnL2](https://documenter.getpostman.com/view/8870498/TzeZFnL2)
 
 ## License
 
