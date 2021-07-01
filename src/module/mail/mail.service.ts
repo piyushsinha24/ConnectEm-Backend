@@ -61,10 +61,10 @@ export class MailService {
                             <p>Your meeting with Mr ${hostLastName} is scheduled for <b>${date}</b>.</p>
                             <p>Time slot: <b>${from} - ${to}</b>.</p>
                             <table style="font-family: sans-serif; background-color: #26D07C; border-radius: 5px;" cellpadding="8">
-                                <td>
+                                <td style="border: 1px solid #fff;">
                                     <a style="width: 80px; height: 40px; text-decoration: none; color: #FFFFFF; border-radius: 5px;" href="${meetlink}" target="_blank">Join</a>
                                 </td>
-                                <td>
+                                <td style="border: 1px solid #fff;">
                                     <a style="width: 80px; height: 40px; text-decoration: none; color: #FFFFFF; border-radius: 5px;" href="${calLink}" target="_blank">Add to Calendar</a>
                                 </td>
                             </table>
