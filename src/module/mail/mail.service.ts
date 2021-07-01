@@ -34,6 +34,7 @@ export class MailService {
         from: string,
         to: string,
         meetlink: string,
+        calLink: string,
     ): string {
         return `
         <!DOCTYPE html>
@@ -63,6 +64,9 @@ export class MailService {
                                 <td>
                                     <a style="width: 80px; height: 40px; text-decoration: none; color: #FFFFFF; border-radius: 5px;" href="${meetlink}" target="_blank">Join</a>
                                 </td>
+                                <td>
+                                    <a style="width: 80px; height: 40px; text-decoration: none; color: #FFFFFF; border-radius: 5px;" href="${calLink}" target="_blank">Add to Calendar</a>
+                                </td>
                             </table>
                             <p>Thanks & Regards,</p>
                             <p style="font-style: italic;">ConnectEm Team</p>
@@ -83,6 +87,7 @@ export class MailService {
         date: string,
         from: string,
         to: string,
+        calLink: string,
     ): string {
         return `
         <!DOCTYPE html>
@@ -110,7 +115,7 @@ export class MailService {
                             <p>Time slot: <b>${from} - ${to}</b>.</p>
                             <table style="font-family: sans-serif; background-color: #26D07C; border-radius: 5px;" cellpadding="8">
                                 <td>
-                                    <a style="width: 80px; height: 40px; text-decoration: none; color: #FFFFFF; border-radius: 5px;" href="https://www.google.com" target="_blank">Add To Calendar</a>
+                                    <a style="width: 80px; height: 40px; text-decoration: none; color: #FFFFFF; border-radius: 5px;" href="${calLink}" target="_blank">Add To Calendar</a>
                                 </td>
                             </table>
                             <p>Thanks & Regards,</p>
@@ -186,69 +191,67 @@ export class MailService {
 
         //* generate add to calendar
 
-        const calEvent = google({
+        const calEventLink = google({
             title: event.title,
             description: event.description,
             start: slot.from,
             end: slot.to,
         })
 
-        console.log(calEvent)
+        let attendeeMail = this._getAttendeeBookHTML(
+            slot.name[attendeeIndex],
+            event.host.lastName,
+            formatDate(timing.date, bookDTO.timezone),
+            formatTime(slot.from, bookDTO.timezone),
+            formatTime(slot.to, bookDTO.timezone),
+            event.eventLink,
+            calEventLink,
+        )
 
-        // let attendeeMail = this._getAttendeeBookHTML(
-        //     slot.name[attendeeIndex],
-        //     event.host.lastName,
-        //     formatDate(timing.date, bookDTO.timezone),
-        //     formatTime(slot.from, bookDTO.timezone),
-        //     formatTime(slot.to, bookDTO.timezone),
-        //     event.eventLink,
-        // )
+        let hostMail = this._getHostBookHTML(
+            event.host.firstName,
+            event.host.lastName,
+            slot.name[attendeeIndex],
+            formatDate(timing.date, event.timezone),
+            formatTime(slot.from, event.timezone),
+            formatTime(slot.to, event.timezone),
+            calEventLink,
+        )
 
-        // let hostMail = this._getHostBookHTML(
-        //     event.host.firstName,
-        //     event.host.lastName,
-        //     slot.name[attendeeIndex],
-        //     formatDate(timing.date, event.timezone),
-        //     formatTime(slot.from, event.timezone),
-        //     formatTime(slot.to, event.timezone),
-        // )
+        let attendeeMailOptions = {
+            from: this.commonConfig.get<string>('GMAIL_USER'),
+            to: bookDTO.email,
+            subject: 'Booking Successful',
+            html: attendeeMail,
+        }
 
-        // let attendeeMailOptions = {
-        //     from: this.commonConfig.get<string>('GMAIL_USER'),
-        //     to: bookDTO.email,
-        //     subject: 'Booking Successful',
-        //     html: attendeeMail,
-        // }
+        let hostMailOptions = {
+            from: this.commonConfig.get<string>('GMAIL_USER'),
+            to: event.host.email,
+            subject: 'New Booking',
+            html: hostMail,
+        }
 
-        // let hostMailOptions = {
-        //     from: this.commonConfig.get<string>('GMAIL_USER'),
-        //     to: event.host.email,
-        //     subject: 'New Booking',
-        //     html: hostMail,
-        // }
+        transporter.sendMail(attendeeMailOptions, function (error, _) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Attendee Email sent.')
+            }
+        })
 
-        // transporter.sendMail(attendeeMailOptions, function (error, _) {
-        //     if (error) {
-        //         console.log(error);
-        //     } else {
-        //         console.log('Attendee Email sent.')
-        //     }
-        // })
-
-        // transporter.sendMail(hostMailOptions, function (error, _) {
-        //     if (error) {
-        //         console.log(error);
-        //     } else {
-        //         console.log('Host Email sent.')
-        //     }
-        // })
+        transporter.sendMail(hostMailOptions, function (error, _) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Host Email sent.')
+            }
+        })
 
         return true
     }
 
     async sendEventCreatedMail(event: Event): Promise<boolean> {
-
-        //TODO: Add to calendar for all dates
 
         let transporter = this._getTransporter()
 
